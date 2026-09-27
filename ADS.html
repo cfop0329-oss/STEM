@@ -1,0 +1,893 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Data World — Алгоритмы и Структуры Данных</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    overflow: hidden;
+    height: 100vh;
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    height: 100vh;
+  }
+  .scene-wrap {
+    position: relative;
+    background: radial-gradient(ellipse at center, #1a2332 0%, #0d1117 100%);
+    overflow: hidden;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+  
+  .header {
+    position: absolute;
+    top: 16px; left: 16px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #58a6ff, #f78166, #d2a8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+  }
+  .header p {
+    font-size: 12px;
+    color: #8b949e;
+    margin-top: 4px;
+  }
+  
+  .legend {
+    position: absolute;
+    bottom: 16px; left: 16px;
+    background: rgba(13, 17, 23, 0.85);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  
+  .panel {
+    background: #161b22;
+    border-left: 1px solid #30363d;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .panel h2 {
+    font-size: 14px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #21262d;
+  }
+  .section { margin-bottom: 24px; }
+  .section-title {
+    font-size: 13px;
+    color: #58a6ff;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-title::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: #58a6ff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #58a6ff;
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #e6edf3;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn:hover { background: #30363d; border-color: #58a6ff; transform: translateX(2px); }
+  .btn:active { transform: translateX(0); }
+  .btn.primary {
+    background: linear-gradient(135deg, #1f6feb, #388bfd);
+    border-color: #388bfd;
+  }
+  .btn.primary:hover { background: linear-gradient(135deg, #388bfd, #58a6ff); }
+  .btn.danger {
+    background: linear-gradient(135deg, #da3633, #f85149);
+    border-color: #f85149;
+  }
+  .btn.success {
+    background: linear-gradient(135deg, #238636, #2ea043);
+    border-color: #2ea043;
+  }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  
+  .log {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    color: #7ee787;
+    height: 120px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+  .log-line { margin-bottom: 2px; }
+  .log-line .op { color: #d2a8ff; }
+  .log-line .val { color: #ffa657; }
+  
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 6px;
+    padding: 10px;
+  }
+  .stat-label { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+  .stat-value { font-size: 20px; font-weight: 700; color: #58a6ff; margin-top: 4px; }
+  
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .speed-control input { flex: 1; }
+  .speed-label { font-size: 11px; color: #8b949e; }
+  
+  input[type=range] {
+    -webkit-appearance: none;
+    background: #21262d;
+    height: 4px;
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    background: #58a6ff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 6px #58a6ff;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="scene-wrap">
+    <div class="header">
+      <h1>⚙ DATA WORLD</h1>
+      <p>Алгоритмы и Структуры Данных · Изометрическая визуализация</p>
+    </div>
+    <canvas id="scene"></canvas>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#ffa657"></div>Коробка (элемент данных)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f85149"></div>Указатель i (робот)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d2a8ff"></div>Указатель j (робот)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div>Конвейер / Труба</div>
+    </div>
+  </div>
+  
+  <div class="panel">
+    <h2>Управление</h2>
+    
+    <div class="section">
+      <div class="section-title">Массив · Bubble Sort</div>
+      <div class="speed-control">
+        <span class="speed-label">Скорость</span>
+        <input type="range" id="speed" min="0.3" max="3" step="0.1" value="1">
+      </div>
+      <button class="btn primary" onclick="shuffleArray()">🔀 Перемешать массив</button>
+      <button class="btn success" onclick="runBubbleSort()">▶ Запустить сортировку</button>
+      <button class="btn" onclick="stepBubbleSort()">⏭ Один шаг</button>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">Стек · LIFO</div>
+      <div class="btn-row">
+        <button class="btn success" onclick="stackPush()">PUSH ↓</button>
+        <button class="btn danger" onclick="stackPop()">POP ↑</button>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">Очередь · FIFO</div>
+      <div class="btn-row">
+        <button class="btn success" onclick="queueEnqueue()">ENQUEUE →</button>
+        <button class="btn danger" onclick="queueDequeue()">DEQUEUE →</button>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">Статистика</div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Сравнений</div>
+          <div class="stat-value" id="stat-comparisons">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Перестановок</div>
+          <div class="stat-value" id="stat-swaps">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Стек</div>
+          <div class="stat-value" id="stat-stack">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Очередь</div>
+          <div class="stat-value" id="stat-queue">0</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <div class="section-title">Журнал операций</div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = canvas.clientWidth;
+  H = canvas.clientHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ============ ИЗОМЕТРИЯ ============
+const TILE_W = 64;
+const TILE_H = 32;
+
+function iso(x, y, z = 0) {
+  return {
+    x: (x - y) * TILE_W / 2,
+    y: (x + y) * TILE_H / 2 - z
+  };
+}
+
+// ============ ДАННЫЕ ============
+const ARRAY_SIZE = 8;
+let array = [];
+let arrayAnimations = []; // {idx, targetX, progress}
+let pointerI = 0, pointerJ = 0;
+let sortState = { running: false, i: 0, j: 0, phase: 'idle', timer: 0 };
+let comparisons = 0, swaps = 0;
+
+let stack = [];
+let stackAnims = []; // {value, targetY, currentY, entering}
+let queue = [];
+let queueAnims = [];
+
+let speed = 1;
+document.getElementById('speed').addEventListener('input', e => speed = parseFloat(e.target.value));
+
+function initArray() {
+  array = [];
+  for (let i = 0; i < ARRAY_SIZE; i++) {
+    array.push(Math.floor(Math.random() * 90) + 10);
+  }
+  arrayAnimations = array.map((_, i) => ({ idx: i, offset: 0, lift: 0 }));
+}
+initArray();
+
+// ============ ЛОГ ============
+const logEl = document.getElementById('log');
+function log(op, msg) {
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="op">[${op}]</span> ${msg}`;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+  while (logEl.children.length > 50) logEl.removeChild(logEl.firstChild);
+}
+function updateStats() {
+  document.getElementById('stat-comparisons').textContent = comparisons;
+  document.getElementById('stat-swaps').textContent = swaps;
+  document.getElementById('stat-stack').textContent = stack.length;
+  document.getElementById('stat-queue').textContent = queue.length;
+}
+
+// ============ BUBBLE SORT ============
+function shuffleArray() {
+  if (sortState.running) return;
+  initArray();
+  comparisons = 0; swaps = 0;
+  updateStats();
+  log('ARR', 'Массив перемешан');
+}
+
+function runBubbleSort() {
+  if (sortState.running) return;
+  sortState = { running: true, i: 0, j: 0, phase: 'compare', timer: 0 };
+  comparisons = 0; swaps = 0;
+  updateStats();
+  log('SORT', 'Запущена сортировка пузырьком');
+}
+
+function stepBubbleSort() {
+  if (!sortState.running) {
+    sortState = { running: true, i: 0, j: 0, phase: 'compare', timer: 0 };
+  }
+  doStep();
+  sortState.running = false;
+}
+
+function doStep() {
+  if (!sortState.running) return;
+  const { i, j } = sortState;
+  if (i >= ARRAY_SIZE - 1) {
+    sortState.running = false;
+    log('SORT', '✓ Сортировка завершена!');
+    return;
+  }
+  if (sortState.phase === 'compare') {
+    comparisons++;
+    updateStats();
+    pointerI = j;
+    pointerJ = j + 1;
+    log('CMP', `arr[${j}]=${array[j]} vs arr[${j+1}]=${array[j+1]}`);
+    sortState.phase = 'swap-check';
+    sortState.timer = 20;
+  } else if (sortState.phase === 'swap-check') {
+    if (array[j] > array[j + 1]) {
+      [array[j], array[j + 1]] = [array[j + 1], array[j]];
+      swaps++;
+      updateStats();
+      log('SWP', `↔ Поменяли местами позиции ${j} и ${j+1}`);
+      sortState.phase = 'next';
+      sortState.timer = 25;
+    } else {
+      sortState.phase = 'next';
+      sortState.timer = 10;
+    }
+  } else if (sortState.phase === 'next') {
+    const newJ = j + 1;
+    if (newJ >= ARRAY_SIZE - 1 - i) {
+      sortState.i = i + 1;
+      sortState.j = 0;
+      log('PASS', `Проход ${i+1} завершён`);
+    } else {
+      sortState.j = newJ;
+    }
+    sortState.phase = 'compare';
+    sortState.timer = 15;
+  }
+}
+
+// ============ STACK ============
+function stackPush() {
+  if (stack.length >= 6) { log('STACK', '⚠ Стек переполнен'); return; }
+  const v = Math.floor(Math.random() * 90) + 10;
+  stack.push(v);
+  stackAnims.push({ value: v, targetY: stack.length - 1, currentY: -1, entering: true });
+  log('PUSH', `Добавлен элемент ${v} (size=${stack.length})`);
+  updateStats();
+}
+
+function stackPop() {
+  if (stack.length === 0) { log('STACK', '⚠ Стек пуст'); return; }
+  const v = stack.pop();
+  const anim = stackAnims.find(a => a.targetY === stack.length && a.entering === false);
+  if (anim) {
+    anim.leaving = true;
+    setTimeout(() => {
+      stackAnims = stackAnims.filter(a => a !== anim);
+    }, 400);
+  } else {
+    stackAnims.pop();
+  }
+  log('POP', `Извлечён элемент ${v} (size=${stack.length})`);
+  updateStats();
+}
+
+// ============ QUEUE ============
+function queueEnqueue() {
+  if (queue.length >= 6) { log('QUEUE', '⚠ Очередь переполнена'); return; }
+  const v = Math.floor(Math.random() * 90) + 10;
+  queue.push(v);
+  queueAnims.push({ value: v, targetX: queue.length - 1, currentX: -1, entering: true });
+  log('ENQ', `Добавлен элемент ${v} (size=${queue.length})`);
+  updateStats();
+}
+
+function queueDequeue() {
+  if (queue.length === 0) { log('QUEUE', '⚠ Очередь пуста'); return; }
+  const v = queue.shift();
+  queueAnims.forEach(a => a.targetX -= 1);
+  const first = queueAnims.find(a => a.entering && !a.leaving);
+  if (first) {
+    first.leaving = true;
+    setTimeout(() => {
+      queueAnims = queueAnims.filter(a => a !== first);
+    }, 400);
+  } else {
+    queueAnims.shift();
+  }
+  log('DEQ', `Извлечён элемент ${v} (size=${queue.length})`);
+  updateStats();
+}
+
+// ============ ОТРИСОВКА ============
+function drawIsoBox(cx, cy, cz, w, h, d, color, label, highlight = false) {
+  const p = (x, y, z) => iso(cx + x, cy + y, cz + z);
+  
+  // Тень
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  const s0 = p(-w/2, -d/2, 0);
+  const s1 = p(w/2, -d/2, 0);
+  const s2 = p(w/2, d/2, 0);
+  const s3 = p(-w/2, d/2, 0);
+  ctx.moveTo(s0.x, s0.y + 4);
+  ctx.lineTo(s1.x, s1.y + 4);
+  ctx.lineTo(s2.x, s2.y + 4);
+  ctx.lineTo(s3.x, s3.y + 4);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Верх
+  const t0 = p(-w/2, -d/2, h);
+  const t1 = p(w/2, -d/2, h);
+  const t2 = p(w/2, d/2, h);
+  const t3 = p(-w/2, d/2, h);
+  
+  // Левая грань
+  const b0 = p(-w/2, -d/2, 0);
+  const b3 = p(-w/2, d/2, 0);
+  ctx.fillStyle = shade(color, -30);
+  ctx.beginPath();
+  ctx.moveTo(t0.x, t0.y);
+  ctx.lineTo(t3.x, t3.y);
+  ctx.lineTo(b3.x, b3.y);
+  ctx.lineTo(b0.x, b0.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  // Правая грань
+  const b1 = p(w/2, -d/2, 0);
+  const b2 = p(w/2, d/2, 0);
+  ctx.fillStyle = shade(color, -15);
+  ctx.beginPath();
+  ctx.moveTo(t1.x, t1.y);
+  ctx.lineTo(t2.x, t2.y);
+  ctx.lineTo(b2.x, b2.y);
+  ctx.lineTo(b1.x, b1.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Верхняя грань
+  const grad = ctx.createLinearGradient(t0.x, t0.y, t2.x, t2.y);
+  grad.addColorStop(0, shade(color, 20));
+  grad.addColorStop(1, color);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(t0.x, t0.y);
+  ctx.lineTo(t1.x, t1.y);
+  ctx.lineTo(t2.x, t2.y);
+  ctx.lineTo(t3.x, t3.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  if (highlight) {
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+  
+  // Этикетка
+  if (label !== undefined) {
+    const center = p(0, 0, h);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(center.x - 14, center.y - 8, 28, 16);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, center.x, center.y);
+  }
+}
+
+function shade(hex, percent) {
+  const num = parseInt(hex.slice(1), 16);
+  let r = (num >> 16) + percent;
+  let g = ((num >> 8) & 0xff) + percent;
+  let b = (num & 0xff) + percent;
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+function drawFloorTile(x, y, color = '#1f2937') {
+  const p0 = iso(x - 0.5, y - 0.5, 0);
+  const p1 = iso(x + 0.5, y - 0.5, 0);
+  const p2 = iso(x + 0.5, y + 0.5, 0);
+  const p3 = iso(x - 0.5, y + 0.5, 0);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  ctx.lineTo(p1.x, p1.y);
+  ctx.lineTo(p2.x, p2.y);
+  ctx.lineTo(p3.x, p3.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#0d1117';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function drawConveyor(x, y, phase) {
+  drawFloorTile(x, y, '#1e3a5f');
+  const p0 = iso(x - 0.5, y, 0.05);
+  const p1 = iso(x + 0.5, y, 0.05);
+  ctx.strokeStyle = '#3b82f6';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.lineDashOffset = -phase;
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  ctx.lineTo(p1.x, p1.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawRobot(cx, cy, cz, color, label) {
+  const base = iso(cx, cy, cz);
+  const top = iso(cx, cy, cz + 0.8);
+  
+  // Тело
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(base.x, base.y - 10, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = shade(color, -30);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // "Глаз" / индикатор
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(base.x, base.y - 12, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(base.x, base.y - 12, 3, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Антенна
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(base.x, base.y - 24);
+  ctx.lineTo(base.x, base.y - 32);
+  ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(base.x, base.y - 33, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Метка
+  ctx.fillStyle = color;
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, base.x, base.y - 38);
+}
+
+function drawStackBunker(baseX, baseY) {
+  // Основание
+  for (let dx = 0; dx < 2; dx++) {
+    for (let dy = 0; dy < 2; dy++) {
+      drawFloorTile(baseX + dx, baseY + dy, '#2d1f3d');
+    }
+  }
+  // Стенки бункера
+  const h = 4;
+  const corners = [
+    iso(baseX - 0.5, baseY - 0.5, 0),
+    iso(baseX + 1.5, baseY - 0.5, 0),
+    iso(baseX + 1.5, baseY + 1.5, 0),
+    iso(baseX - 0.5, baseY + 1.5, 0)
+  ];
+  const cornersTop = [
+    iso(baseX - 0.5, baseY - 0.5, h),
+    iso(baseX + 1.5, baseY - 0.5, h),
+    iso(baseX + 1.5, baseY + 1.5, h),
+    iso(baseX - 0.5, baseY + 1.5, h)
+  ];
+  
+  // Задние стенки
+  ctx.fillStyle = 'rgba(88, 40, 120, 0.4)';
+  ctx.strokeStyle = '#a855f7';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  ctx.lineTo(corners[1].x, corners[1].y);
+  ctx.lineTo(cornersTop[1].x, cornersTop[1].y);
+  ctx.lineTo(cornersTop[0].x, cornersTop[0].y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  ctx.lineTo(corners[3].x, corners[3].y);
+  ctx.lineTo(cornersTop[3].x, cornersTop[3].y);
+  ctx.lineTo(cornersTop[0].x, cornersTop[0].y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Передние стенки
+  ctx.fillStyle = 'rgba(88, 40, 120, 0.25)';
+  ctx.beginPath();
+  ctx.moveTo(corners[1].x, corners[1].y);
+  ctx.lineTo(corners[2].x, corners[2].y);
+  ctx.lineTo(cornersTop[2].x, cornersTop[2].y);
+  ctx.lineTo(cornersTop[1].x, cornersTop[1].y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  ctx.beginPath();
+  ctx.moveTo(corners[3].x, corners[3].y);
+  ctx.lineTo(corners[2].x, corners[2].y);
+  ctx.lineTo(cornersTop[2].x, cornersTop[2].y);
+  ctx.lineTo(cornersTop[3].x, cornersTop[3].y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+}
+
+function drawQueuePipe(baseX, baseY, length) {
+  for (let i = 0; i < length; i++) {
+    drawFloorTile(baseX + i, baseY, '#1a3d3d');
+  }
+  // Труба (верхняя часть)
+  const p0 = iso(baseX - 0.5, baseY - 0.3, 0.3);
+  const p1 = iso(baseX + length - 0.5, baseY - 0.3, 0.3);
+  const p2 = iso(baseX + length - 0.5, baseY + 0.3, 0.3);
+  const p3 = iso(baseX - 0.5, baseY + 0.3, 0.3);
+  
+  const p0t = iso(baseX - 0.5, baseY - 0.3, 0.9);
+  const p1t = iso(baseX + length - 0.5, baseY - 0.3, 0.9);
+  const p2t = iso(baseX + length - 0.5, baseY + 0.3, 0.9);
+  const p3t = iso(baseX - 0.5, baseY + 0.3, 0.9);
+  
+  // Верх трубы
+  ctx.fillStyle = 'rgba(20, 184, 166, 0.3)';
+  ctx.strokeStyle = '#14b8a6';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(p0t.x, p0t.y);
+  ctx.lineTo(p1t.x, p1t.y);
+  ctx.lineTo(p2t.x, p2t.y);
+  ctx.lineTo(p3t.x, p3t.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Передняя стенка
+  ctx.fillStyle = 'rgba(20, 184, 166, 0.2)';
+  ctx.beginPath();
+  ctx.moveTo(p3.x, p3.y);
+  ctx.lineTo(p2.x, p2.y);
+  ctx.lineTo(p2t.x, p2t.y);
+  ctx.lineTo(p3t.x, p3t.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Задняя стенка
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  ctx.lineTo(p1.x, p1.y);
+  ctx.lineTo(p1t.x, p1t.y);
+  ctx.lineTo(p0t.x, p0t.y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Стрелки направления
+  for (let i = 0; i < length; i++) {
+    const c = iso(baseX + i, baseY, 0.6);
+    ctx.fillStyle = 'rgba(20, 184, 166, 0.6)';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('→', c.x, c.y);
+  }
+}
+
+// ============ ОСНОВНОЙ ЦИКЛ ============
+let frame = 0;
+let lastTime = performance.now();
+
+function render() {
+  const now = performance.now();
+  const dt = (now - lastTime) / 16.67;
+  lastTime = now;
+  frame++;
+  
+  ctx.clearRect(0, 0, W, H);
+  
+  // Сетка фона
+  const offsetX = W / 2;
+  const offsetY = H * 0.35;
+  
+  ctx.save();
+  ctx.translate(offsetX, offsetY);
+  
+  // Фоновая сетка
+  ctx.globalAlpha = 0.3;
+  for (let x = -8; x <= 8; x++) {
+    for (let y = -4; y <= 8; y++) {
+      drawFloorTile(x, y, '#0f1724');
+    }
+  }
+  ctx.globalAlpha = 1;
+  
+  // ===== ЗОНА 1: МАССИВ (конвейер) =====
+  const arrY = 0;
+  const arrStartX = -ARRAY_SIZE / 2;
+  
+  // Метка зоны
+  const arrLabel = iso(arrStartX - 0.5, arrY, 1.5);
+  ctx.fillStyle = '#ffa657';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('ARRAY', arrLabel.x, arrLabel.y);
+  
+  // Конвейер
+  for (let i = 0; i < ARRAY_SIZE; i++) {
+    drawConveyor(arrStartX + i, arrY, frame * 0.5);
+  }
+  
+  // Коробки массива
+  for (let i = 0; i < ARRAY_SIZE; i++) {
+    const anim = arrayAnimations[i];
+    const bx = arrStartX + i + (anim ? anim.offset : 0);
+    const lift = anim ? anim.lift : 0;
+    const boxH = 0.4 + (array[i] / 100) * 0.6;
+    const isComparing = sortState.running && (sortState.phase === 'compare' || sortState.phase === 'swap-check') && (i === sortState.j || i === sortState.j + 1);
+    const color = isComparing ? '#fbbf24' : '#f97316';
+    drawIsoBox(bx, arrY, lift, 0.8, boxH, 0.8, color, array[i], isComparing);
+  }
+  
+  // Роботы-указатели
+  if (sortState.running || sortState.phase !== 'idle') {
+    const piX = arrStartX + pointerI;
+    const pjX = arrStartX + pointerJ;
+    drawRobot(piX, arrY - 1.2, 0, '#f85149', 'i=' + pointerI);
+    drawRobot(pjX, arrY + 1.2, 0, '#d2a8ff', 'j=' + pointerJ);
+  }
+  
+  // ===== ЗОНА 2: СТЕК =====
+  const stkX = -7, stkY = 3;
+  
+  const stkLabel = iso(stkX, stkY - 1, 5);
+  ctx.fillStyle = '#a855f7';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('STACK (LIFO)', stkLabel.x, stkLabel.y);
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#8b949e';
+  ctx.fillText('↑ TOP', stkLabel.x, stkLabel.y + 14);
+  
+  drawStackBunker(stkX, stkY);
+  
+  // Коробки в стеке
+  for (let i = 0; i < stackAnims.length; i++) {
+    const a = stackAnims[i];
+    if (a.entering) {
+      a.currentY += (a.targetY - a.currentY) * 0.15 * speed;
+      if (Math.abs(a.currentY - a.targetY) < 0.05) {
+        a.currentY = a.targetY;
+        a.entering = false;
+      }
+    }
+    if (a.leaving) {
+      a.currentY += 0.2 * speed;
+    }
+    const sz = 0.7;
+    const z = 0.1 + a.currentY * 0.6;
+    drawIsoBox(stkX + 0.5, stkY + 0.5, z, sz, 0.5, sz, '#a855f7', a.value);
+  }
+  
+  // ===== ЗОНА 3: ОЧЕРЕДЬ =====
+  const queX = 1, queY = 4;
+  const queLen = 6;
+  
+  const queLabel = iso(queX + queLen / 2, queY - 1.2, 1.5);
+  ctx.fillStyle = '#14b8a6';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('QUEUE (FIFO)', queLabel.x, queLabel.y);
+  
+  const queHead = iso(queX - 0.5, queY, 1.3);
+  ctx.fillStyle = '#7ee787';
+  ctx.font = '10px monospace';
+  ctx.fillText('HEAD →', queHead.x, queHead.y);
+  
+  const queTail = iso(queX + queLen - 0.5, queY, 1.3);
+  ctx.fillStyle = '#ffa657';
+  ctx.fillText('← TAIL', queTail.x, queTail.y);
+  
+  drawQueuePipe(queX, queY, queLen);
+  
+  // Коробки в очереди
+  for (let i = 0; i < queueAnims.length; i++) {
+    const a = queueAnims[i];
+    if (a.entering) {
+      a.currentX += (a.targetX - a.currentX) * 0.15 * speed;
+      if (Math.abs(a.currentX - a.targetX) < 0.05) {
+        a.currentX = a.targetX;
+        a.entering = false;
+      }
+    }
+    if (a.leaving) {
+      a.currentX -= 0.2 * speed;
+    }
+    const bx = queX + a.currentX;
+    drawIsoBox(bx, queY, 0.35, 0.6, 0.5, 0.6, '#14b8a6', a.value);
+  }
+  
+  ctx.restore();
+  
+  // Обновление сортировки
+  if (sortState.running) {
+    sortState.timer -= speed;
+    if (sortState.timer <= 0) {
+      doStep();
+    }
+  }
+  
+  requestAnimationFrame(render);
+}
+
+render();
+log('INIT', 'Data World загружен. Нажмите "Перемешать массив" или "Запустить сортировку"');
+updateStats();
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Logic Circuit Builder - 3 Levels</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+            color: #e2e8f0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(15, 20, 30, 0.9);
+            padding: 1rem 2rem;
+            border-bottom: 2px solid #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: #63b3ed;
+            text-shadow: 0 0 10px rgba(99, 179, 237, 0.5);
+        }
+
+        .level-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .level-btn {
+            padding: 0.5rem 1rem;
+            background: #4a5568;
+            border: 2px solid #63b3ed;
+            border-radius: 4px;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .level-btn:hover {
+            background: #63b3ed;
+            color: #1a202c;
+        }
+
+        .level-btn.active {
+            background: #63b3ed;
+            color: #1a202c;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-panel {
+            background: rgba(20, 25, 35, 0.95);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #4a5568;
+        }
+
+        .task-title {
+            font-size: 1rem;
+            color: #63b3ed;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .task-description {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            line-height: 1.5;
+        }
+
+        .toolbar {
+            background: rgba(20, 25, 35, 0.95);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #4a5568;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tool-section {
+            margin-bottom: 1rem;
+        }
+
+        .tool-title {
+            font-size: 0.85rem;
+            color: #63b3ed;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tool-btn {
+            width: 100%;
+            padding: 0.6rem;
+            background: #2d3748;
+            border: 2px solid #4a5568;
+            border-radius: 4px;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .tool-btn:hover {
+            background: #4a5568;
+            border-color: #63b3ed;
+        }
+
+        .tool-btn.active {
+            background: #63b3ed;
+            color: #1a202c;
+            border-color: #63b3ed;
+        }
+
+        .canvas-area {
+            flex: 1;
+            background: #1a202c;
+            border-radius: 8px;
+            border: 2px solid #4a5568;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #grid-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .status-bar {
+            background: rgba(15, 20, 30, 0.95);
+            padding: 0.8rem 2rem;
+            border-top: 2px solid #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            padding: 0.5rem 1rem;
+            background: #4a5568;
+            border: none;
+            border-radius: 4px;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #63b3ed;
+            color: #1a202c;
+        }
+
+        .control-btn.success {
+            background: #38a169;
+        }
+
+        .control-btn.success:hover {
+            background: #48bb78;
+        }
+
+        .success-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(56, 161, 105, 0.95);
+            padding: 2rem 3rem;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            color: white;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 0 30px rgba(56, 161, 105, 0.5);
+        }
+
+        .success-message.show {
+            display: block;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        .truth-table {
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            background: #2d3748;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .truth-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .truth-table th, .truth-table td {
+            padding: 0.3rem;
+            text-align: center;
+            border: 1px solid #4a5568;
+        }
+
+        .truth-table th {
+            background: #4a5568;
+            color: #63b3ed;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚡ Digital Logic Circuit Builder</h1>
+        <div class="level-selector">
+            <button class="level-btn active" data-level="1">Level 1</button>
+            <button class="level-btn" data-level="2">Level 2</button>
+            <button class="level-btn" data-level="3">Level 3</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="task-panel">
+                <div class="task-title" id="task-title">Задача</div>
+                <div class="task-description" id="task-description"></div>
+                <div class="truth-table" id="truth-table"></div>
+            </div>
+
+            <div class="toolbar">
+                <div class="tool-section">
+                    <div class="tool-title">Входы</div>
+                    <button class="tool-btn" data-tool="lever">🔴 Рычаг (Switch)</button>
+                    <button class="tool-btn" data-tool="button">🟠 Кнопка (Momentary)</button>
+                    <button class="tool-btn" data-tool="sensor">📡 Датчик Движения</button>
+                </div>
+
+                <div class="tool-section">
+                    <div class="tool-title">Логические Вентили</div>
+                    <button class="tool-btn" data-tool="and">AND Gate</button>
+                    <button class="tool-btn" data-tool="or">OR Gate</button>
+                    <button class="tool-btn" data-tool="not">NOT Gate</button>
+                    <button class="tool-btn" data-tool="xor">XOR Gate</button>
+                </div>
+
+                <div class="tool-section">
+                    <div class="tool-title">Выходы</div>
+                    <button class="tool-btn" data-tool="led">💡 LED Индикатор</button>
+                    <button class="tool-btn" data-tool="door">🚪 Дверь</button>
+                    <button class="tool-btn" data-tool="platform">⬆️ Платформа</button>
+                </div>
+
+                <div class="tool-section">
+                    <div class="tool-title">Инструменты</div>
+                    <button class="tool-btn active" data-tool="wire">📡 Провод</button>
+                    <button class="tool-btn" data-tool="delete">❌ Удалить</button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="canvas-area">
+            <canvas id="grid-canvas"></canvas>
+            <div class="success-message" id="success-message">
+                ✅ УРОВЕНЬ ПРОЙДЕН!
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div>
+            <span>Уровень: <span id="current-level">1</span> / 3</span>
+        </div>
+        <div class="controls">
+            <button class="control-btn" id="reset-btn">Сброс</button>
+            <button class="control-btn success" id="check-btn">Проверить Решение</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('grid-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const GRID_SIZE = 40;
+        let gridWidth, gridHeight;
+        let selectedTool = 'wire';
+        let isDrawing = false;
+        let currentWireStart = null;
+        let wires = [];
+        let components = [];
+        let currentLevel = 1;
+
+        const COLORS = {
+            gridLine: '#2d3748',
+            wire: '#63b3ed',
+            wireActive: '#f56565',
+            componentBg: '#4a5568',
+            componentBorder: '#63b3ed',
+            ledOn: '#ffd700',
+            ledOff: '#718096',
+            leverOn: '#f56565',
+            leverOff: '#718096'
+        };
+
+        const LEVELS = {
+            1: {
+                title: "Комбинационный Замок",
+                description: "Откройте дверь, когда нажаты Рычаг A И Рычаг B, ИЛИ активирован Датчик Движения.",
+                formula: "(A AND B) OR C",
+                truthTable: [
+                    [0, 0, 0, 0],
+                    [0, 0, 1, 1],
+                    [0, 1, 0, 0],
+                    [0, 1, 1, 1],
+                    [1, 0, 0, 0],
+                    [1, 0, 1, 1],
+                    [1, 1, 0, 1],
+                    [1, 1, 1, 1]
+                ],
+                requiredInputs: ['lever', 'lever', 'sensor'],
+                requiredOutput: 'door'
+            },
+            2: {
+                title: "Полусумматор (Half Adder)",
+                description: "Сложите два бита. XOR дает сумму (S), AND дает перенос (C). При 1+1=10₂",
+                formula: "S = A XOR B, C = A AND B",
+                truthTable: [
+                    [0, 0, 0, 0],
+                    [0, 1, 1, 0],
+                    [1, 0, 1, 0],
+                    [1, 1, 0, 1]
+                ],
+                requiredInputs: ['lever', 'lever'],
+                requiredOutput: ['led', 'led']
+            },
+            3: {
+                title: "Память Платформы (D-триггер)",
+                description: "Удерживайте платформу поднятой после отпускания кнопки. Используйте обратную связь.",
+                formula: "Q = D (запомнить при Clock=1)",
+                truthTable: [
+                    [0, 0, 0],
+                    [0, 1, 0],
+                    [1, 0, 1],
+                    [1, 1, 1]
+                ],
+                requiredInputs: ['button', 'button'],
+                requiredOutput: 'platform'
+            }
+        };
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            gridWidth = Math.floor(canvas.width / GRID_SIZE);
+            gridHeight = Math.floor(canvas.height / GRID_SIZE);
+            drawGrid();
+        }
+
+        function drawGrid() {
+            ctx.fillStyle = '#1a202c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = COLORS.gridLine;
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= canvas.width; x += GRID_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += GRID_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        function getGridPos(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((clientX - rect.left) / GRID_SIZE);
+            const y = Math.floor((clientY - rect.top) / GRID_SIZE);
+            return { x, y };
+        }
+
+        function drawComponent(comp) {
+            const px = comp.x * GRID_SIZE;
+            const py = comp.y * GRID_SIZE;
+            
+            ctx.fillStyle = COLORS.componentBg;
+            ctx.strokeStyle = COLORS.componentBorder;
+            ctx.lineWidth = 2;
+            
+            switch (comp.type) {
+                case 'and':
+                    ctx.fillRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.strokeRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 12px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('AND', px + GRID_SIZE/2, py + GRID_SIZE/2 + 4);
+                    break;
+                    
+                case 'or':
+                    ctx.fillRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.strokeRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 12px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('OR', px + GRID_SIZE/2, py + GRID_SIZE/2 + 4);
+                    break;
+                    
+                case 'not':
+                    ctx.beginPath();
+                    ctx.moveTo(px + 10, py + 5);
+                    ctx.lineTo(px + GRID_SIZE - 15, py + GRID_SIZE/2);
+                    ctx.lineTo(px + 10, py + GRID_SIZE - 5);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(px + GRID_SIZE - 12, py + GRID_SIZE/2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    break;
+                    
+                case 'xor':
+                    ctx.fillRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.strokeRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 12px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('XOR', px + GRID_SIZE/2, py + GRID_SIZE/2 + 4);
+                    break;
+                    
+                case 'lever':
+                    ctx.fillRect(px + 5, py + GRID_SIZE/2 - 3, GRID_SIZE - 10, 6);
+                    ctx.strokeRect(px + 5, py + GRID_SIZE/2 - 3, GRID_SIZE - 10, 6);
+                    const leverAngle = comp.value ? -45 : 45;
+                    const rad = leverAngle * Math.PI / 180;
+                    const dx = 15 * Math.cos(rad);
+                    const dy = 15 * Math.sin(rad);
+                    ctx.strokeStyle = '#ffa500';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(px + GRID_SIZE/2, py + GRID_SIZE/2);
+                    ctx.lineTo(px + GRID_SIZE/2 + dx, py + GRID_SIZE/2 - dy);
+                    ctx.stroke();
+                    ctx.fillStyle = comp.value ? COLORS.leverOn : COLORS.leverOff;
+                    ctx.beginPath();
+                    ctx.arc(px + GRID_SIZE/2 + dx, py + GRID_SIZE/2 - dy, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                    
+                case 'button':
+                    ctx.beginPath();
+                    ctx.arc(px + GRID_SIZE/2, py + GRID_SIZE/2, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = comp.value ? '#ffa500' : '#718096';
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffa500';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    break;
+                    
+                case 'sensor':
+                    ctx.fillRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.strokeRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.fillStyle = comp.value ? '#00ff00' : '#718096';
+                    ctx.beginPath();
+                    ctx.arc(px + GRID_SIZE/2, py + GRID_SIZE/2, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 10px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('SEN', px + GRID_SIZE/2, py + GRID_SIZE/2 + 3);
+                    break;
+                    
+                case 'led':
+                    ctx.beginPath();
+                    ctx.arc(px + GRID_SIZE/2, py + GRID_SIZE/2, 10, 0, Math.PI * 2);
+                    ctx.fillStyle = comp.value ? COLORS.ledOn : COLORS.ledOff;
+                    ctx.fill();
+                    ctx.strokeStyle = '#ccc';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    if (comp.value) {
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = COLORS.ledOn;
+                        ctx.beginPath();
+                        ctx.arc(px + GRID_SIZE/2, py + GRID_SIZE/2, 12, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    }
+                    break;
+                    
+                case 'door':
+                    ctx.fillStyle = comp.value ? '#38a169' : '#718096';
+                    ctx.fillRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px + 5, py + 5, GRID_SIZE - 10, GRID_SIZE - 10);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 10px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('DOOR', px + GRID_SIZE/2, py + GRID_SIZE/2 + 3);
+                    break;
+                    
+                case 'platform':
+                    ctx.fillStyle = comp.value ? '#63b3ed' : '#718096';
+                    ctx.fillRect(px + 3, py + 3, GRID_SIZE - 6, GRID_SIZE - 6);
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(px + 3, py + 3, GRID_SIZE - 6, GRID_SIZE - 6);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 10px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('PLAT', px + GRID_SIZE/2, py + GRID_SIZE/2 + 3);
+                    break;
+            }
+        }
+
+        function drawWires() {
+            ctx.strokeStyle = COLORS.wire;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            
+            wires.forEach(wire => {
+                const startX = wire.start.x * GRID_SIZE + GRID_SIZE/2;
+                const startY = wire.start.y * GRID_SIZE + GRID_SIZE/2;
+                const endX = wire.end.x * GRID_SIZE + GRID_SIZE/2;
+                const endY = wire.end.y * GRID_SIZE + GRID_SIZE/2;
+                
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                
+                ctx.fillStyle = COLORS.wire;
+                ctx.beginPath();
+                ctx.arc(startX, startY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(endX, endY, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function render() {
+            drawGrid();
+            drawWires();
+            components.forEach(drawComponent);
+        }
+
+        function simulateCircuit() {
+            components.forEach(comp => {
+                if (!['lever', 'button', 'sensor'].includes(comp.type)) {
+                    comp.value = 0;
+                }
+            });
+            
+            let changed = true;
+            let iterations = 0;
+            
+            while (changed && iterations < 100) {
+                changed = false;
+                iterations++;
+                
+                components.forEach(comp => {
+                    if (['and', 'or', 'xor', 'not', 'led', 'door', 'platform'].includes(comp.type)) {
+                        const inputWires = wires.filter(w => w.end.x === comp.x && w.end.y === comp.y);
+                        
+                        let inputs = [];
+                        inputWires.forEach(wire => {
+                            const source = components.find(c => c.x === wire.start.x && c.y === wire.start.y);
+                            if (source) {
+                                inputs.push(source.value);
+                            }
+                        });
+                        
+                        let newValue = 0;
+                        
+                        if (comp.type === 'and' && inputs.length >= 2) {
+                            newValue = inputs.every(i => i === 1) ? 1 : 0;
+                        } else if (comp.type === 'or' && inputs.length >= 2) {
+                            newValue = inputs.some(i => i === 1) ? 1 : 0;
+                        } else if (comp.type === 'xor' && inputs.length >= 2) {
+                            newValue = inputs.reduce((a, b) => a ^ b, 0);
+                        } else if (comp.type === 'not' && inputs.length >= 1) {
+                            newValue = inputs[0] ? 0 : 1;
+                        } else if (['led', 'door', 'platform'].includes(comp.type) && inputs.length >= 1) {
+                            newValue = inputs[0];
+                        }
+                        
+                        if (newValue !== comp.value) {
+                            comp.value = newValue;
+                            changed = true;
+                        }
+                    }
+                });
+            }
+        }
+
+        function checkSolution() {
+            const level = LEVELS[currentLevel];
+            const inputs = components.filter(c => level.requiredInputs.includes(c.type));
+            const outputs = components.filter(c => 
+                Array.isArray(level.requiredOutput) ? 
+                level.requiredOutput.includes(c.type) : 
+                c.type === level.requiredOutput
+            );
+            
+            if (inputs.length < level.requiredInputs.length) {
+                alert('Недостаточно входов!');
+                return;
+            }
+            
+            if (outputs.length === 0) {
+                alert('Нет выходов!');
+                return;
+            }
+            
+            // Test all combinations
+            const testInputs = inputs.slice(0, level.requiredInputs.length);
+            const testOutputs = outputs.slice(0, Array.isArray(level.requiredOutput) ? level.requiredOutput.length : 1);
+            
+            let allCorrect = true;
+            
+            for (let i = 0; i < level.truthTable.length; i++) {
+                const row = level.truthTable[i];
+                
+                // Set input values
+                for (let j = 0; j < testInputs.length; j++) {
+                    testInputs[j].value = row[j];
+                }
+                
+                simulateCircuit();
+                
+                // Check outputs
+                for (let j = 0; j < testOutputs.length; j++) {
+                    const expected = row[testInputs.length + j];
+                    if (testOutputs[j].value !== expected) {
+                        allCorrect = false;
+                        break;
+                    }
+                }
+                
+                if (!allCorrect) break;
+            }
+            
+            if (allCorrect) {
+                const successMsg = document.getElementById('success-message');
+                successMsg.classList.add('show');
+                setTimeout(() => {
+                    successMsg.classList.remove('show');
+                }, 2000);
+            } else {
+                alert('Решение неверное! Проверьте таблицу истинности.');
+            }
+        }
+
+        function loadLevel(levelNum) {
+            currentLevel = levelNum;
+            const level = LEVELS[levelNum];
+            
+            document.getElementById('task-title').textContent = level.title;
+            document.getElementById('task-description').textContent = level.description;
+            document.getElementById('current-level').textContent = levelNum;
+            
+            // Generate truth table HTML
+            let tableHTML = '<table><tr>';
+            const inputs = level.requiredInputs;
+            const outputs = Array.isArray(level.requiredOutput) ? level.requiredOutput : [level.requiredOutput];
+            
+            inputs.forEach((_, i) => {
+                tableHTML += `<th>In${i+1}</th>`;
+            });
+            outputs.forEach((_, i) => {
+                tableHTML += `<th>Out${i+1}</th>`;
+            });
+            tableHTML += '</tr>';
+            
+            level.truthTable.forEach(row => {
+                tableHTML += '<tr>';
+                row.forEach(val => {
+                    tableHTML += `<td>${val}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</table>';
+            
+            document.getElementById('truth-table').innerHTML = tableHTML;
+            
+            components = [];
+            wires = [];
+            render();
+        }
+
+        // Event handlers
+        canvas.addEventListener('mousedown', (e) => {
+            const pos = getGridPos(e.clientX, e.clientY);
+            
+            if (selectedTool === 'wire') {
+                isDrawing = true;
+                currentWireStart = pos;
+            } else if (['and', 'or', 'not', 'xor', 'lever', 'button', 'sensor', 'led', 'door', 'platform'].includes(selectedTool)) {
+                const existingComp = components.find(c => c.x === pos.x && c.y === pos.y);
+                if (!existingComp) {
+                    components.push({
+                        type: selectedTool,
+                        x: pos.x,
+                        y: pos.y,
+                        value: 0
+                    });
+                    render();
+                }
+            } else if (selectedTool === 'delete') {
+                components = components.filter(c => !(c.x === pos.x && c.y === pos.y));
+                wires = wires.filter(w => 
+                    !(w.start.x === pos.x && w.start.y === pos.y) &&
+                    !(w.end.x === pos.x && w.end.y === pos.y)
+                );
+                render();
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const pos = getGridPos(e.clientX, e.clientY);
+            
+            if (isDrawing && currentWireStart) {
+                render();
+                ctx.strokeStyle = COLORS.wire;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                const startX = currentWireStart.x * GRID_SIZE + GRID_SIZE/2;
+                const startY = currentWireStart.y * GRID_SIZE + GRID_SIZE/2;
+                const endX = pos.x * GRID_SIZE + GRID_SIZE/2;
+                const endY = pos.y * GRID_SIZE + GRID_SIZE/2;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (isDrawing && currentWireStart) {
+                const pos = getGridPos(e.clientX, e.clientY);
+                if (pos.x !== currentWireStart.x || pos.y !== currentWireStart.y) {
+                    wires.push({ start: currentWireStart, end: pos });
+                }
+                isDrawing = false;
+                currentWireStart = null;
+                render();
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const pos = getGridPos(e.clientX, e.clientY);
+            const comp = components.find(c => c.x === pos.x && c.y === pos.y);
+            
+            if (comp && ['lever', 'button'].includes(comp.type)) {
+                comp.value = comp.value ? 0 : 1;
+                simulateCircuit();
+                render();
+            }
+        });
+
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedTool = btn.dataset.tool;
+            });
+        });
+
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                loadLevel(parseInt(btn.dataset.level));
+            });
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            loadLevel(currentLevel);
+        });
+
+        document.getElementById('check-btn').addEventListener('click', () => {
+            checkSolution();
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        loadLevel(1);
+    </script>
+</body>
+</html>
